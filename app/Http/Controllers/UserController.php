@@ -19,6 +19,13 @@ class UserController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
+
+    public function index()
+    {
+        $users = User::latest()->get();
+        return view('admin.users.index', compact('users'));
+    }
+
     public function login(Request $request)
     {
         try {
@@ -62,19 +69,25 @@ class UserController extends Controller
                 // Regenerate session untuk keamanan
                 $request->session()->regenerate();
                 
+                $user = Auth::user();
+                
                 // Log aktivitas login
                 Log::info('User logged in', [
-                    'user_id' => Auth::id(),
-                    'username' => Auth::user()->username,
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'role' => $user->role,
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent()
                 ]);
 
-                // Update last login (optional - perlu tambah kolom last_login di tabel users)
-                // User::where('id', Auth::id())->update(['last_login' => now()]);
-                
-                return redirect()->intended(route('dashboard'))
-                    ->with('success', 'Login berhasil! Selamat datang, ' . Auth::user()->name);
+                // Redirect berdasarkan role
+                if ($user->role === 'admin') {
+                    return redirect()->route('admin.dashboard')
+                        ->with('success', 'Login berhasil! Selamat datang Admin, ' . $user->name);
+                } else {
+                    return redirect()->route('obat.index')
+                        ->with('success', 'Login berhasil! Selamat datang, ' . $user->name);
+                }
             }
 
             // Login gagal - password salah
@@ -181,7 +194,7 @@ class UserController extends Controller
                 // Regenerate session
                 $request->session()->regenerate();
 
-                return redirect()->route('dashboard')
+                return redirect()->route('obat.index')
                     ->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . '. Akun Anda telah aktif.');
 
             } catch (Exception $e) {
