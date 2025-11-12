@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom middleware alias
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            // 'user' => \App\Http\Middleware\UserMiddleware::class,
+            'user' => \App\Http\Middleware\UserMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

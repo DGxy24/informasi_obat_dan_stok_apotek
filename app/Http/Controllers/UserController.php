@@ -19,13 +19,6 @@ class UserController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-
-    public function index()
-    {
-        $users = User::latest()->get();
-        return view('admin.users.index', compact('users'));
-    }
-
     public function login(Request $request)
     {
         try {
@@ -68,9 +61,9 @@ class UserController extends Controller
             if (Auth::attempt($credentials, $remember)) {
                 // Regenerate session untuk keamanan
                 $request->session()->regenerate();
-                
+
                 $user = Auth::user();
-                
+
                 // Log aktivitas login
                 Log::info('User logged in', [
                     'user_id' => $user->id,
@@ -95,11 +88,10 @@ class UserController extends Controller
                 ->withErrors(['password' => 'Password yang Anda masukkan salah'])
                 ->withInput($request->only('username'))
                 ->with('error', 'Kredensial yang Anda masukkan tidak valid');
-
         } catch (Exception $e) {
             // Log error
             Log::error('Login error: ' . $e->getMessage());
-            
+
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan saat login. Silakan coba lagi.')
                 ->withInput($request->only('username'));
@@ -126,23 +118,23 @@ class UserController extends Controller
                 'name.required' => 'Nama lengkap wajib diisi',
                 'name.min' => 'Nama lengkap minimal 3 karakter',
                 'name.max' => 'Nama lengkap maksimal 255 karakter',
-                
+
                 'email.required' => 'Email wajib diisi',
                 'email.email' => 'Format email tidak valid',
                 'email.unique' => 'Email sudah terdaftar, silakan gunakan email lain',
                 'email.max' => 'Email maksimal 255 karakter',
-                
+
                 'phone.required' => 'Nomor HP wajib diisi',
                 'phone.min' => 'Nomor HP minimal 10 digit',
                 'phone.max' => 'Nomor HP maksimal 15 digit',
                 'phone.unique' => 'Nomor HP sudah terdaftar',
-                
+
                 'username.required' => 'Username wajib diisi',
                 'username.min' => 'Username minimal 4 karakter',
                 'username.max' => 'Username maksimal 255 karakter',
                 'username.unique' => 'Username sudah digunakan, silakan pilih username lain',
                 'username.alpha_dash' => 'Username hanya boleh mengandung huruf, angka, dash dan underscore',
-                
+
                 'password.required' => 'Password wajib diisi',
                 'password.min' => 'Password minimal 8 karakter',
                 'password.confirmed' => 'Konfirmasi password tidak cocok',
@@ -168,13 +160,14 @@ class UserController extends Controller
             DB::beginTransaction();
 
             try {
-                // Buat user baru
+                // Buat user baru dengan role default 'user'
                 $user = User::create([
                     'name' => $request->name,
                     'email' => $request->email,
                     'phone' => $request->phone,
                     'username' => $request->username,
                     'password' => Hash::make($request->password),
+                    'role' => 'user', // Default role untuk registrasi adalah user
                 ]);
 
                 // Commit transaction
@@ -196,29 +189,27 @@ class UserController extends Controller
 
                 return redirect()->route('obat.index')
                     ->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name . '. Akun Anda telah aktif.');
-
             } catch (Exception $e) {
                 // Rollback jika ada error
                 DB::rollBack();
-                
+
                 Log::error('Registration database error: ' . $e->getMessage());
-                
+
                 // Untuk development, tampilkan error detail (hapus di production)
                 if (config('app.debug')) {
                     return redirect()->back()
                         ->withInput()
                         ->with('error', 'Error: ' . $e->getMessage());
                 }
-                
+
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
             }
-
         } catch (Exception $e) {
             // Log error
             Log::error('Registration error: ' . $e->getMessage());
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat registrasi. Silakan coba lagi.');
@@ -252,11 +243,10 @@ class UserController extends Controller
 
             return redirect()->route('home')
                 ->with('success', 'Anda telah berhasil logout. Sampai jumpa kembali!');
-
         } catch (Exception $e) {
             // Log error
             Log::error('Logout error: ' . $e->getMessage());
-            
+
             return redirect()->route('home')
                 ->with('error', 'Terjadi kesalahan saat logout');
         }
@@ -335,15 +325,13 @@ class UserController extends Controller
 
                 return redirect()->back()
                     ->with('success', 'Profil berhasil diperbarui');
-
             } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('Profile update database error: ' . $e->getMessage());
-                
+
                 return redirect()->back()
                     ->with('error', 'Gagal memperbarui profil');
             }
-
         } catch (Exception $e) {
             Log::error('Profile update error: ' . $e->getMessage());
             return redirect()->back()
@@ -402,19 +390,264 @@ class UserController extends Controller
 
                 return redirect()->back()
                     ->with('success', 'Password berhasil diubah');
-
             } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('Password change database error: ' . $e->getMessage());
-                
+
                 return redirect()->back()
                     ->with('error', 'Gagal mengubah password');
             }
-
         } catch (Exception $e) {
             Log::error('Password change error: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan saat mengubah password');
+        }
+    }
+
+    // ==================== ADMIN USER MANAGEMENT ====================
+
+    /**
+     * Display all users (Admin only)
+     */
+    public function index(Request $request)
+    {
+        try {
+            $query = User::query();
+            // dd($query);
+            // Search functionality
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('username', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Filter by role
+            if ($request->has('role') && $request->role != '') {
+                $query->where('role', $request->role);
+            }
+
+            // Order by latest
+            $query->orderBy('created_at', 'desc');
+
+            // Paginate
+            $users = $query->paginate(10);
+
+            return view('admin.users.index', compact('users'));
+        } catch (Exception $e) {
+            Log::error('User index error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat data user');
+        }
+    }
+
+    /**
+     * Show form to create new user
+     */
+    public function create()
+    {
+        return view('admin.users.create');
+    }
+
+    /**
+     * Store new user
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255|min:3',
+                'email' => 'required|string|email|max:255|unique:users,email',
+                'phone' => 'required|string|min:10|max:15|unique:users,phone',
+                'username' => 'required|string|max:255|min:4|unique:users,username|alpha_dash',
+                'password' => 'required|string|min:8',
+                'role' => 'required|in:user,admin',
+            ], [
+                'name.required' => 'Nama lengkap wajib diisi',
+                'email.required' => 'Email wajib diisi',
+                'email.unique' => 'Email sudah terdaftar',
+                'phone.required' => 'Nomor HP wajib diisi',
+                'phone.unique' => 'Nomor HP sudah terdaftar',
+                'username.required' => 'Username wajib diisi',
+                'username.unique' => 'Username sudah digunakan',
+                'password.required' => 'Password wajib diisi',
+                'password.min' => 'Password minimal 8 karakter',
+                'role.required' => 'Role wajib dipilih',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput();
+            }
+
+            DB::beginTransaction();
+
+            try {
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'username' => $request->username,
+                    'password' => Hash::make($request->password),
+                    'role' => $request->role,
+                ]);
+
+                DB::commit();
+
+                Log::info('Admin created new user', [
+                    'admin_id' => Auth::id(),
+                    'new_user_id' => $user->id,
+                    'username' => $user->username,
+                    'role' => $user->role
+                ]);
+
+                return redirect()->route('admin.users.index')
+                    ->with('success', 'User berhasil ditambahkan');
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Store user database error: ' . $e->getMessage());
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Gagal menyimpan data user');
+            }
+        } catch (Exception $e) {
+            Log::error('Store user error: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menambah user');
+        }
+    }
+
+    /**
+     * Show form to edit user
+     */
+    public function edit($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            return view('admin.users.edit', compact('user'));
+        } catch (Exception $e) {
+            Log::error('Edit user error: ' . $e->getMessage());
+            return redirect()->route('admin.users.index')
+                ->with('error', 'User tidak ditemukan');
+        }
+    }
+
+    /**
+     * Update user data
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255|min:3',
+                'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+                'phone' => 'required|string|min:10|max:15|unique:users,phone,' . $id,
+                'username' => 'required|string|max:255|min:4|unique:users,username,' . $id . '|alpha_dash',
+                'role' => 'required|in:user,admin',
+            ], [
+                'name.required' => 'Nama lengkap wajib diisi',
+                'email.required' => 'Email wajib diisi',
+                'email.unique' => 'Email sudah digunakan',
+                'phone.required' => 'Nomor HP wajib diisi',
+                'phone.unique' => 'Nomor HP sudah digunakan',
+                'username.required' => 'Username wajib diisi',
+                'username.unique' => 'Username sudah digunakan',
+                'role.required' => 'Role wajib dipilih',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput();
+            }
+
+            DB::beginTransaction();
+
+            try {
+                $user->update([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'username' => $request->username,
+                    'role' => $request->role,
+                ]);
+
+                // Update password jika diisi
+                if ($request->filled('password')) {
+                    $user->update([
+                        'password' => Hash::make($request->password),
+                    ]);
+                }
+
+                DB::commit();
+
+                Log::info('Admin updated user', [
+                    'admin_id' => Auth::id(),
+                    'updated_user_id' => $user->id,
+                    'username' => $user->username
+                ]);
+
+                return redirect()->route('admin.users.index')
+                    ->with('success', 'User berhasil diperbarui');
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Update user database error: ' . $e->getMessage());
+                return redirect()->back()
+                    ->with('error', 'Gagal memperbarui data user');
+            }
+        } catch (Exception $e) {
+            Log::error('Update user error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat memperbarui user');
+        }
+    }
+
+    /**
+     * Delete user
+     */
+    public function destroy($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            // Prevent deleting own account
+            if ($user->id === Auth::id()) {
+                return redirect()->back()
+                    ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri');
+            }
+
+            DB::beginTransaction();
+
+            try {
+                $username = $user->username;
+                $user->delete();
+
+                DB::commit();
+
+                Log::info('Admin deleted user', [
+                    'admin_id' => Auth::id(),
+                    'deleted_user_id' => $id,
+                    'deleted_username' => $username
+                ]);
+
+                return redirect()->route('admin.users.index')
+                    ->with('success', 'User berhasil dihapus');
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Delete user database error: ' . $e->getMessage());
+                return redirect()->back()
+                    ->with('error', 'Gagal menghapus user');
+            }
+        } catch (Exception $e) {
+            Log::error('Delete user error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus user');
         }
     }
 }

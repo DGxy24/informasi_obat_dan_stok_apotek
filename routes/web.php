@@ -53,7 +53,7 @@ Route::middleware(['auth', 'user'])->group(function () {
 // ==================== ADMIN ROUTES ====================
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Admin Dashboard
-    Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Admin Obat Management (CRUD)
     Route::get('/obat', function () {
@@ -68,8 +68,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return view('admin.obat.edit', compact('id'));
     })->name('obat.edit');
     
-    // Admin User Management
-    Route::get('/users',[UserController::class,'index'])->name('user.index');
+    // Admin User Management (CRUD)
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     
     // Admin Reports
     Route::get('/reports', function () {
