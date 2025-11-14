@@ -391,6 +391,23 @@
             </li>
 
             <li class="menu-item">
+                <a href="{{ route('admin.supplier.index') }}"
+                    class="menu-link {{ request()->routeIs('admin.supplier.*') ? 'active' : '' }}">
+                    <span class="menu-icon">🫱🏻‍🫲🏻</span>
+                    <span class="menu-text">Kelola Supplier</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{{ route('admin.stock.index') }}"
+                    class="menu-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
+                    <span class="menu-icon">📦</span>
+                    <span class="menu-text">Stok</span>
+                    {{-- <span class="menu-badge">5</span> --}}
+                </a>
+            </li>
+
+            <li class="menu-item">
                 <a href="{{ route('admin.users.index') }}"
                     class="menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <span class="menu-icon">👥</span>
@@ -398,13 +415,10 @@
                 </a>
             </li>
 
-            <li class="menu-item">
-                <a href="#" class="menu-link">
-                    <span class="menu-icon">📦</span>
-                    <span class="menu-text">Stok</span>
-                    {{-- <span class="menu-badge">5</span> --}}
-                </a>
-            </li>
+     
+
+
+    
 
 
             <li class="menu-item">

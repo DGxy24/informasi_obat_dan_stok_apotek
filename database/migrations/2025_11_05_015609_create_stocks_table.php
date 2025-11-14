@@ -14,10 +14,7 @@ return new class extends Migration
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('medicine_id')->constrained('medicines')->onDelete('cascade');
-            $table->integer('quantity');
-            $table->enum('type', ['in', 'out']); // stok masuk atau keluar
-            $table->string('reference')->nullable(); // referensi dokumen
-            $table->date('date');
+            $table->integer('quantity')->default(0);
             $table->timestamps();
         });
     }

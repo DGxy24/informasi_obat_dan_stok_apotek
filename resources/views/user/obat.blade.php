@@ -3,7 +3,7 @@
 @section('title', 'Lokasi')
 
 @section('content')
- <div class="main-content">
+    <div class="main-content">
         <div class="obat-container">
             <!-- Page Header -->
             <div class="page-header">
@@ -15,8 +15,7 @@
             <div class="search-section">
                 <form action="{{ route('obat.index') }}" method="GET">
                     <div class="search-box">
-                        <input type="text" name="search" placeholder="Cari nama obat..."
-                            value="{{ request('search') }}">
+                        <input type="text" name="search" placeholder="Cari nama obat..." value="{{ request('search') }}">
                         <button type="submit" class="search-btn">🔍 Cari</button>
                     </div>
                 </form>
@@ -40,8 +39,8 @@
                     <div class="product-card"
                         data-category="{{ strtolower(str_replace(' ', '-', $obat->category->name)) }}">
                         <div class="product-image">
-                            @if ($obat->gambar)
-                                <img src="{{ asset('storage/' . $obat->gambar) }}" alt="{{ $obat->nama }}"
+                            @if ($obat->image)
+                                <img src="{{ asset('storage/' . $obat->image) }}" alt="{{ $obat->nama }}"
                                     style="width: 100%; height: 100%; object-fit: cover;">
                             @else
                                 @if (stripos($obat->category->name, 'vitamin') !== false)
@@ -50,7 +49,9 @@
                                     💊
                                 @endif
                             @endif
-
+                            @php
+                                $quantity = optional($obat->stocks)->quantity ?? 0;
+                            @endphp
                             @if ($obat->stocks && $obat->stocks->quantity > 50)
                                 <span class="product-badge">Tersedia</span>
                             @elseif($obat->stocks && $obat->stocks->quantity > 0)
@@ -67,15 +68,19 @@
                             <div class="product-meta">
                                 <div class="product-stock">
                                     <span class="stock-icon">📦</span>
-                                    <span>Stok: {{ $obat->stocks->quantity }}</span>
+                                    <span>Stok: {{ $medicine->stocks->quantity ?? '-' }}</span>
                                 </div>
                                 <div class="product-price">Rp {{ number_format($obat->price, 0, ',', '.') }}</div>
                             </div>
                             <div class="product-actions">
                                 <a href="{{ route('obat.show', $obat->id) }}" class="btn-detail">Detail</a>
-                                @if ($obat->stocks->quantity > 0)
-                                    <button class="btn-add" onclick="addToCart({{ $obat->id }})">+
-                                        Keranjang</button>
+
+                                @php
+                                    $quantity = optional($obat->stocks)->quantity ?? 0;
+                                @endphp
+
+                                @if ($quantity > 0)
+                                    <button class="btn-add" onclick="addToCart({{ $obat->id }})">+ Keranjang</button>
                                 @else
                                     <button class="btn-add" disabled>Habis</button>
                                 @endif

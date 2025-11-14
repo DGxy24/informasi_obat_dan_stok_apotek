@@ -1,5 +1,9 @@
 <?php
 
+
+use App\Http\Controllers\AdminObatController;
+use App\Http\Controllers\AdminStockController;
+use App\Http\Controllers\AdminSupplierController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -55,19 +59,27 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Admin Obat Management (CRUD)
-    Route::get('/obat', function () {
-        return view('admin.obat.index');
-    })->name('obat.index');
+    // Admin Obat Management (CRUD) - Using MedicineController
+    Route::get('/obat', [AdminObatController::class, 'index'])->name('obat.index');
+    Route::get('/obat/create', [AdminObatController::class, 'create'])->name('obat.create');
+    Route::post('/obat', [AdminObatController::class, 'store'])->name('obat.store');
+    Route::get('/obat/{id}', [AdminObatController::class, 'show'])->name('obat.show');
+    Route::put('/obat/{id}', [AdminObatController::class, 'update'])->name('obat.update');
+    Route::delete('/obat/{id}', [AdminObatController::class, 'destroy'])->name('obat.destroy');
     
-    Route::get('/obat/create', function () {
-        return view('admin.obat.create');
-    })->name('obat.create');
+        // Admin supplier Management (CRUD)
+    Route::resource('supplier', AdminSupplierController::class);
+
+        // Admin Stock Management (CRUD)
+     // PENTING: Route custom harus SEBELUM route yang pakai parameter
+    Route::post('stock/create', [AdminStockController::class, 'create'])->name('stock.create');
+    Route::post('stock/add', [AdminStockController::class, 'add'])->name('stock.add');
+    Route::post('stock/reduce', [AdminStockController::class, 'reduce'])->name('stock.reduce');
     
-    Route::get('/obat/{id}/edit', function ($id) {
-        return view('admin.obat.edit', compact('id'));
-    })->name('obat.edit');
-    
+    // Route dengan parameter di akhir
+    Route::get('stock', [AdminStockController::class, 'index'])->name('stock.index');
+    Route::get('stock/{medicineId}', [AdminStockController::class, 'show'])->name('stock.show');
+
     // Admin User Management (CRUD)
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
