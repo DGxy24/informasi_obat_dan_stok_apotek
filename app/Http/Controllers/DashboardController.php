@@ -16,7 +16,7 @@ class DashboardController extends Controller
         // === Total data ===
         $totalUser = User::count();
         $totalObat = Medicine::count();
-        $stokRendah = Stock::where('jumlah', '<', 10)->count();
+        $stokRendah = Stock::where('quantity', '<', 50)->count(); // Ubah 'jumlah' ke 'quantity'
 
         // === Pertumbuhan User (mingguan) ===
         $now = Carbon::now();
@@ -43,32 +43,33 @@ class DashboardController extends Controller
             ? (($obatThisMonth - $obatLastMonth) / $obatLastMonth) * 100
             : ($obatThisMonth > 0 ? 100 : 0);
 
-        // === Aktivitas terbaru ===
+        // === Aktivitas terbaru (5 terakhir) ===
         $aktivitas = collect();
 
         // Obat baru ditambahkan
-        $obatBaru = Medicine::latest()->take(5)->get()->map(function ($item) {
+        $obatBaru = Medicine::latest()->take(3)->get()->map(function ($item) {
             return [
                 'icon' => '💊',
-                'judul' => "Obat baru ditambahkan: {$item->name}",
+                'judul' => "Obat baru: {$item->name}",
                 'waktu' => $item->created_at,
             ];
         });
 
         // User baru terdaftar
-        $userBaru = User::latest()->take(5)->get()->map(function ($item) {
+        $userBaru = User::latest()->take(2)->get()->map(function ($item) {
             return [
                 'icon' => '👤',
-                'judul' => "User baru terdaftar: {$item->name}",
+                'judul' => "User baru: {$item->name}",
                 'waktu' => $item->created_at,
             ];
         });
 
         // Stok diperbarui
-        $stokUpdate = Stock::latest()->take(5)->get()->map(function ($item) {
+        $stokUpdate = Stock::with('medicine')->latest('updated_at')->take(3)->get()->map(function ($item) {
+            $medicineName = $item->medicine ? $item->medicine->name : "Obat ID {$item->medicine_id}";
             return [
                 'icon' => '📦',
-                'judul' => "Stok diperbarui untuk obat ID {$item->medicine_id}",
+                'judul' => "Stok diperbarui: {$medicineName}",
                 'waktu' => $item->updated_at,
             ];
         });

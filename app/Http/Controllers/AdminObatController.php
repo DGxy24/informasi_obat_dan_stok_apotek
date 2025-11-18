@@ -21,7 +21,11 @@ class AdminObatController extends Controller
     {
         try {
             $categories = Category::all();
+            $suppliers = Supplier::all(); // TAMBAHKAN INI untuk dropdown di modal edit
             $query = Medicine::query();
+
+            // Load relasi yang diperlukan untuk tampilan tabel
+            $query->with(['category', 'stocks', 'supplier']);
 
             // Search functionality
             if ($request->has('search') && $request->search != '') {
@@ -49,14 +53,30 @@ class AdminObatController extends Controller
             // Paginate
             $medicines = $query->paginate(10);
 
-            return view('admin.obat.index', compact('medicines', 'categories'));
+            return view('admin.obat.index', compact('medicines', 'categories', 'suppliers')); // TAMBAHKAN 'suppliers'
         } catch (\Exception $e) {
             \Log::error('Medicine index error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memuat data obat');
         }
     }
 
+    public function show($id)
+    {
+        try {
+            // Tambahkan 'supplier' ke dalam with()
+            $medicine = Medicine::with(['category', 'stocks', 'supplier'])->findOrFail($id);
 
+            return response()->json([
+                'success' => true,
+                'data' => $medicine
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Obat tidak ditemukan'
+            ], 404);
+        }
+    }
     /**
      * Show the form for creating a new medicine
      */
@@ -153,21 +173,7 @@ class AdminObatController extends Controller
     /**
      * Display the specified medicine (AJAX for modal)
      */
-    public function show($id)
-    {
-        try {
-            $medicine = Medicine::with(['category', 'stocks'])->findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'data' => $medicine
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Obat tidak ditemukan'
-            ], 404);
-        }
-    }
+
 
     /**
      * Update the specified medicine (AJAX for modal)

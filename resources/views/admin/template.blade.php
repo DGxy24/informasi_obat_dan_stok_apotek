@@ -415,22 +415,23 @@
                 </a>
             </li>
 
-     
 
 
-    
+
+
 
 
             <li class="menu-item">
-                <a href="{{ route('admin.reports') }}"
-                    class="menu-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
-                    <span class="menu-icon">📈</span>
-                    <span class="menu-text">Laporan</span>
+                <a href="{{ route('admin.category.index') }}"
+                    class="menu-link {{ request()->routeIs('admin.category.*') ? 'active' : '' }}">
+                    <span class="menu-icon">📁</span>
+                    <span class="menu-text">Kategori</span>
                 </a>
             </li>
 
             <li class="menu-item">
-                <a href="#" class="menu-link">
+                <a href="{{ route('admin.settings.index') }}"
+                    class="menu-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <span class="menu-icon">⚙️</span>
                     <span class="menu-text">Pengaturan</span>
                 </a>
@@ -458,7 +459,7 @@
             </div>
 
             <div class="top-navbar-actions">
-            
+
                 <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                     @csrf
                     <button type="submit" class="logout-btn">Logout</button>

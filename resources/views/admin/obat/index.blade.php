@@ -6,7 +6,6 @@
 
 @section('styles')
     <style>
-        /* ... (CSS sama seperti users/index.blade.php) ... */
         .page-actions {
             display: flex;
             justify-content: space-between;
@@ -416,7 +415,7 @@
                             <div class="medicine-info">
                                 <div class="medicine-image">
                                     @if ($medicine->image)
-                                        <img src="{{ asset('storage/' . $medicine->image) }}" alt="{{ $medicine->nama }}">
+                                        <img src="{{ asset('storage/' . $medicine->image) }}" alt="{{ $medicine->name }}">
                                     @else
                                         💊
                                     @endif
@@ -428,7 +427,7 @@
                             </div>
                         </td>
                         <td>{{ $medicine->generic_name ?? '-' }}</td>
-                        <td>{{ $medicine->stocks->quantity ?? '-' }}</td>
+                        <td>{{ optional($medicine->stocks)->quantity ?? '-' }}</td>
                         <td>{{ $medicine->price }}</td>
                         <td>{{ $medicine->unit }}</td>
                         <td>
@@ -447,12 +446,7 @@
                         </td>
                         <td>
                             <div class="action-buttons">
-                                @php
-                                    $quantity = optional($medicine->stocks)->quantity;
-                                @endphp
-
-                                <button onclick="viewMedicine({{ $medicine->id }})" class="btn-sm btn-view"
-                                    {{ is_null($quantity) ? 'disabled' : '' }}>
+                                <button onclick="viewMedicine({{ $medicine->id }})" class="btn-sm btn-view">
                                     👁️ Lihat
                                 </button>
                                 <button onclick="editMedicine({{ $medicine->id }})" class="btn-sm btn-edit">
@@ -460,7 +454,7 @@
                                 </button>
                                 <form action="{{ route('admin.obat.destroy', $medicine->id) }}" method="POST"
                                     style="display: inline;"
-                                    onsubmit="return confirm('Yakin ingin menghapus {{ $medicine->nama }}?')">
+                                    onsubmit="return confirm('Yakin ingin menghapus {{ $medicine->name }}?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-sm btn-delete">
@@ -472,7 +466,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem;">
+                        <td colspan="8" style="text-align: center; padding: 3rem;">
                             <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
                             <h3>Tidak ada data obat</h3>
                             <p style="color: #64748b;">Obat yang Anda cari tidak ditemukan</p>
@@ -540,41 +534,70 @@
                     <input type="hidden" id="edit_id" name="id">
 
                     <div class="form-group">
-                        <label class="form-label">Nama Obat</label>
-                        <input type="text" id="edit_nama" name="name" class="form-control" required>
+                        <label class="form-label">Nama Obat *</label>
+                        <input type="text" id="edit_name" name="name" class="form-control" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Kategori</label>
-                        <select id="edit_kategori" name="category_id" class="form-control" required>
+                        <label class="form-label">Nama Generik</label>
+                        <input type="text" id="edit_generic_name" name="generic_name" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Kategori *</label>
+                        <select id="edit_category_id" name="category_id" class="form-control" required>
                             <option value="">-- Pilih Kategori --</option>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                             @endforeach
-
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label class="form-label">Supplier</label>
+                        <select id="edit_supplier_id" name="supplier_id" class="form-control">
+                            <option value="">-- Pilih Supplier (Opsional) --</option>
+                            @foreach ($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">
+                                    {{ $supplier->name }}{{ $supplier->contact_person ? ' - ' . $supplier->contact_person : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label class="form-label">Deskripsi</label>
-                        <textarea id="edit_deskripsi" name="description" class="form-control" required></textarea>
+                        <textarea id="edit_description" name="description" class="form-control"></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Harga</label>
-                        <input type="number" id="edit_harga" name="price" class="form-control" required min="0">
+                        <label class="form-label">Harga *</label>
+                        <input type="number" id="edit_price" name="price" class="form-control" required min="0" step="0.01">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Satuan</label>
-                        <input type="text" id="edit_satuan" name="unit" class="form-control" required>
+                        <label class="form-label">Satuan *</label>
+                        <select id="edit_unit" name="unit" class="form-control" required>
+                            <option value="">-- Pilih Satuan --</option>
+                            <option value="tablet">Tablet</option>
+                            <option value="kapsul">Kapsul</option>
+                            <option value="botol">Botol</option>
+                            <option value="tube">Tube</option>
+                            <option value="strip">Strip</option>
+                            <option value="box">Box</option>
+                            <option value="ampul">Ampul</option>
+                            <option value="vial">Vial</option>
+                            <option value="sachet">Sachet</option>
+                            <option value="ml">ml (mililiter)</option>
+                        </select>
                     </div>
 
-
                     <div class="form-group">
-                        <label class="form-label">Gambar (Opsional)</label>
-                        <input type="file" id="edit_gambar" name="image" class="form-control" accept="image/*">
+                        <label class="form-label">Gambar Saat Ini</label>
+                        <div id="current_image_preview" style="margin-bottom: 1rem;"></div>
+                        <label class="form-label">Upload Gambar Baru (Opsional)</label>
+                        <input type="file" id="edit_image" name="image" class="form-control" accept="image/*">
+                        <small style="color: #64748b;">Kosongkan jika tidak ingin mengubah gambar</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -601,40 +624,119 @@
                     console.log(data);
                     if (data.success) {
                         const medicine = data.data;
-                        const imageHtml = medicine.gambar ?
-                            `<img src="/storage/${medicine.gambar}" alt="${medicine.nama}" class="detail-image">` :
+                        const imageHtml = medicine.image ?
+                            `<img src="/storage/${medicine.image}" alt="${medicine.name}" class="detail-image">` :
                             '<div style="font-size: 4rem;">💊</div>';
 
                         modalBody.innerHTML = `
                     <div style="text-align: center; margin-bottom: 1.5rem;">
                         ${imageHtml}
                     </div>
+                    
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.9rem;">📋 INFORMASI UMUM</h4>
+                    </div>
+                    
                     <div class="detail-group">
                         <div class="detail-label">Nama Obat</div>
                         <div class="detail-value">${medicine.name}</div>
                     </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Nama Generik</div>
+                        <div class="detail-value">${medicine.generic_name || '-'}</div>
+                    </div>
+                    
                     <div class="detail-group">
                         <div class="detail-label">Kategori</div>
                         <div class="detail-value">${medicine.category.name}</div>
                     </div>
+                    
                     <div class="detail-group">
                         <div class="detail-label">Deskripsi</div>
-                        <div class="detail-value">${medicine.description}</div>
+                        <div class="detail-value">${medicine.description || '-'}</div>
                     </div>
-                    <div class="detail-group">
-                        <div class="detail-label">Stok</div>
-                        <div class="detail-value">${medicine.stocks.quantity} ${medicine.unit}</div>
+                    
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.9rem;">💰 HARGA & SATUAN</h4>
                     </div>
+                    
                     <div class="detail-group">
                         <div class="detail-label">Harga</div>
-                        <div class="detail-value">Rp ${Number(medicine.price).toLocaleString('id-ID')}</div>
+                        <div class="detail-value" style="font-size: 1.3rem; color: #10b981; font-weight: 700;">
+                            Rp ${Number(medicine.price).toLocaleString('id-ID')}
+                        </div>
                     </div>
-                    ${medicine.expired_date ? `
-                                                        <div class="detail-group">
-                                                            <div class="detail-label">Tanggal Kadaluarsa</div>
-                                                            <div class="detail-value">${new Date(medicine.expired_date).toLocaleDateString('id-ID')}</div>
-                                                        </div>
-                                                        ` : ''}
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Satuan</div>
+                        <div class="detail-value">${medicine.unit}</div>
+                    </div>
+                    
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.9rem;">📦 STOK & SUPPLIER</h4>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Stok Tersedia</div>
+                        <div class="detail-value" style="font-size: 1.3rem; color: #3b82f6; font-weight: 700;">
+                            ${medicine.stocks ? medicine.stocks.quantity : 0} ${medicine.unit}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Supplier</div>
+                        <div class="detail-value">
+                            ${medicine.supplier ? `
+                                <div style="background: #eff6ff; padding: 0.8rem; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 0.3rem;">
+                                        🏢 ${medicine.supplier.name}
+                                    </div>
+                                    ${medicine.supplier.contact_person ? `
+                                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">
+                                            👤 ${medicine.supplier.contact_person}
+                                        </div>
+                                    ` : ''}
+                                    ${medicine.supplier.phone ? `
+                                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.2rem;">
+                                            📞 ${medicine.supplier.phone}
+                                        </div>
+                                    ` : ''}
+                                    ${medicine.supplier.address ? `
+                                        <div style="font-size: 0.85rem; color: #64748b;">
+                                            📍 ${medicine.supplier.address}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : '<span style="color: #94a3b8;">Belum ada supplier</span>'}
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.9rem;">📅 INFORMASI TAMBAHAN</h4>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Ditambahkan Pada</div>
+                        <div class="detail-value">${new Date(medicine.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">Terakhir Diupdate</div>
+                        <div class="detail-value">${new Date(medicine.updated_at).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</div>
+                    </div>
                 `;
                     }
                 })
@@ -659,19 +761,51 @@
                 .then(data => {
                     if (data.success) {
                         const medicine = data.data;
+                        
+                        console.log('Medicine data:', medicine); // Debug log
+                        
+                        // Set semua field
                         document.getElementById('edit_id').value = medicine.id;
-                        document.getElementById('edit_nama').value = medicine.nama ?? medicine.name;
-                        document.getElementById('edit_deskripsi').value = medicine.deskripsi ?? medicine.description;
-                        document.getElementById('edit_harga').value = medicine.harga ?? medicine.price;
-                        document.getElementById('edit_satuan').value = medicine.satuan ?? medicine.unit;
+                        document.getElementById('edit_name').value = medicine.name;
+                        document.getElementById('edit_generic_name').value = medicine.generic_name || '';
+                        document.getElementById('edit_category_id').value = medicine.category_id;
+                        document.getElementById('edit_supplier_id').value = medicine.supplier_id || '';
+                        document.getElementById('edit_description').value = medicine.description || '';
+                        document.getElementById('edit_price').value = medicine.price;
+                        
+                        // Set unit/satuan - pastikan value match dengan option value
+                        const unitSelect = document.getElementById('edit_unit');
+                        console.log('Unit from DB:', medicine.unit); // Debug log
+                        
+                        // Cari option yang match (case insensitive)
+                        const unitValue = medicine.unit ? medicine.unit.toLowerCase() : '';
+                        let optionFound = false;
+                        
+                        for (let i = 0; i < unitSelect.options.length; i++) {
+                            if (unitSelect.options[i].value.toLowerCase() === unitValue) {
+                                unitSelect.value = unitSelect.options[i].value;
+                                optionFound = true;
+                                console.log('Unit matched:', unitSelect.options[i].value); // Debug log
+                                break;
+                            }
+                        }
+                        
+                        if (!optionFound && unitValue) {
+                            console.warn('Unit not found in options:', medicine.unit);
+                            // Set value anyway, mungkin ada custom value
+                            unitSelect.value = medicine.unit;
+                        }
 
-                        // Set kategori (old value)
-                        const kategoriSelect = document.getElementById('edit_kategori');
-                        kategoriSelect.value = medicine.category_id;
-
-                        // Optional field jika ada
-                        if (medicine.expired_date) {
-                            document.getElementById('edit_expired_date').value = medicine.expired_date;
+                        // Show current image
+                        const imagePreview = document.getElementById('current_image_preview');
+                        if (medicine.image) {
+                            imagePreview.innerHTML = `
+                                <img src="/storage/${medicine.image}" 
+                                     alt="Current image" 
+                                     style="max-width: 200px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            `;
+                        } else {
+                            imagePreview.innerHTML = '<span style="color: #64748b;">Tidak ada gambar</span>';
                         }
 
                         modal.classList.add('show');
@@ -684,32 +818,24 @@
                     alert('Terjadi kesalahan saat memuat data obat.');
                 });
         }
-        // Handle submit form edit
+
         document.getElementById('editForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const id = document.getElementById('edit_id').value;
             const formData = new FormData(this);
+            const imageFile = document.getElementById('edit_image').files[0];
 
-            // Debug: cek apakah image ada
-            const imageFile = document.getElementById('edit_gambar').files[0];
-            console.log('Image File:', imageFile);
-
-            if (imageFile) {
-                console.log('Image Name:', imageFile.name);
-                console.log('Image Size:', imageFile.size);
-                console.log('Image Type:', imageFile.type);
-            }
-
-            // Pastikan image ter-append
+            // Only append image if a new one is selected
             if (imageFile) {
                 formData.set('image', imageFile);
             }
 
-            // Laravel butuh _method jika pakai FormData
+            // Add _method for Laravel
             formData.append('_method', 'PUT');
 
-            // Debug: lihat isi FormData
+            // Debug: log form data
+            console.log('Submitting data:');
             for (let pair of formData.entries()) {
                 console.log(pair[0] + ': ', pair[1]);
             }
@@ -729,7 +855,17 @@
 
                 if (!response.ok) {
                     console.error('Error Response:', data);
-                    alert('Gagal memperbarui data: ' + (data.message || response.statusText));
+                    
+                    // Show validation errors if any
+                    if (data.errors) {
+                        let errorMsg = 'Validation errors:\n';
+                        for (let field in data.errors) {
+                            errorMsg += `- ${field}: ${data.errors[field].join(', ')}\n`;
+                        }
+                        alert(errorMsg);
+                    } else {
+                        alert('Gagal memperbarui data: ' + (data.message || response.statusText));
+                    }
                     return;
                 }
 
@@ -744,7 +880,7 @@
 
             } catch (error) {
                 console.error('Server Error:', error);
-                alert('Terjadi error saat update. Lihat console untuk detailnya.');
+                alert('Terjadi error saat update: ' + error.message);
             }
         });
 
@@ -752,7 +888,6 @@
             document.getElementById(modalId).classList.remove('show');
         }
 
-        // Close modal when clicking outside
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {

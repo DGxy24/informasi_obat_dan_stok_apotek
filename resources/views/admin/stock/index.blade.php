@@ -415,7 +415,7 @@
                             <span class="stock-quantity">{{ $stock->quantity }}</span>
                         </td>
                         <td>
-                            @if ($stock->quantity > 50)
+                            @if ($stock->quantity >= 50)
                                 <span class="badge badge-success">✓ Tersedia</span>
                             @elseif($stock->quantity > 0)
                                 <span class="badge badge-warning">⚠️ Stok Rendah</span>

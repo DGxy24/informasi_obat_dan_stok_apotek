@@ -380,7 +380,7 @@
             </div>
             <div class="stat-value">{{ $stokRendah }}</div>
 
-            @if ($stokRendah > 15)
+            @if ($stokRendah > 5)
                 <div class="stat-change negative">
                     <span>⚠️</span>
                     <span>Perlu restock</span>
@@ -411,11 +411,7 @@
             <div class="action-desc">Manajemen pengguna</div>
         </a>
 
-        <a href="{{ route('admin.reports') }}" class="action-card">
-            <div class="action-icon">📊</div>
-            <div class="action-title">Lihat Laporan</div>
-            <div class="action-desc">Laporan & statistik</div>
-        </a>
+
     </div>
 
     <!-- Charts and Activity -->
@@ -423,7 +419,7 @@
     <div class="section-card">
         <div class="section-header">
             <h3 class="section-title">Aktivitas Terbaru</h3>
-            <a href="#" class="section-action">Lihat Semua →</a>
+            <a href="{{ route('admin.activities.index') }}" class="section-action">Lihat Semua →</a>
         </div>
         <ul class="activity-list">
             @forelse ($aktivitas as $item)
@@ -442,7 +438,6 @@
                 </li>
             @endforelse
         </ul>
-
     </div>
     </div>
 @endsection

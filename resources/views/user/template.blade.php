@@ -52,12 +52,16 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
 
-        .navbar-brand::before {
-            content: "💊";
-            font-size: 2rem;
+        .navbar-logo {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: white;
+            padding: 4px;
         }
 
         .navbar-menu {
@@ -132,6 +136,23 @@
             background: rgba(220, 38, 38, 1);
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        .login-btn {
+            background: #0A1E5E;
+            color: #0ea5e9;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.4);
         }
 
         /* Main Content */
@@ -406,6 +427,16 @@
             .page-header h1 {
                 font-size: 2rem;
             }
+
+            .navbar-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .navbar-menu {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -414,7 +445,15 @@
     <!-- Navbar -->
     <nav class="navbar" id="navbar">
         <div class="navbar-container">
-            <a href="{{ route('obat.index') }}" class="navbar-brand">Apotek Sehat Sentosa</a>
+            <a href="{{ route('obat.index') }}" class="navbar-brand">
+                @if(!empty($apotek->logo))
+                    <img src="{{ asset('storage/' . $apotek->logo) }}" alt="{{ $apotek->nama_apotek }}" class="navbar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span style="font-size: 2rem; display: none;">💊</span>
+                @else
+                    <span style="font-size: 2rem;">💊</span>
+                @endif
+                {{$apotek->nama_apotek}}
+            </a>
 
             <ul class="navbar-menu">
                 <li>
@@ -436,16 +475,28 @@
                 </li>
 
                 <div class="navbar-user">
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    @auth
+                        {{-- User sudah login --}}
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </div>
+                            <span class="user-name">{{ Auth::user()->name }}</span>
                         </div>
-                        <span class="user-name">{{ Auth::user()->name }}</span>
-                    </div>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="logout-btn">Logout</button>
-                    </form>
+                        <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="logout-btn">Logout</button>
+                        </form>
+                    @else
+                        {{-- User belum login (Guest) --}}
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                G
+                            </div>
+                            <span class="user-name">Guest</span>
+                        </div>
+                        <a href="{{ route('home') }}" class="login-btn">Login</a>
+                    @endauth
                 </div>
             </ul>
         </div>
