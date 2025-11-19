@@ -11,7 +11,7 @@ class ApotekSeeder extends Seeder
     public function run(): void
     {
         DB::table('apoteks')->insert([
-            'nama_apotek' => 'Apotek Sehat Sejahtera',
+            'nama_apotek' => 'Apotek (Masukkan nama Apotek disini)',
             'alamat' => 'Jl. Kesehatan No. 123, Medan, Sumatera Utara',
             'telepon' => '061-1234567',
             'email' => 'info@apoteksehat.com',
@@ -23,5 +23,6 @@ class ApotekSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
+        echo "✅ nama apotek default berhasil dibuat!\n";
     }
 }

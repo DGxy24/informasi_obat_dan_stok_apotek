@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             MedicineSeeder::class,
             StockSeeder::class,
             AdminSeeder::class,
+            ApotekSeeder::class,
         ]);
     }
 }
