@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('medicines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
-            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('set null')->nullable();
+            $table->foreignId('supplier_id')
+                ->nullable()
+                ->constrained('suppliers')
+                ->nullOnDelete();
             $table->string('name');
             $table->string('generic_name')->nullable();
             $table->text('description')->nullable();
