@@ -165,7 +165,8 @@ composer install
 ```bash
 # Copy file environment
 cp .env.example .env
-
+# Atau
+copy .env.example .env
 # Generate application key
 php artisan key:generate
 ```
