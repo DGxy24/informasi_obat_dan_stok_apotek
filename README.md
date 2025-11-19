@@ -842,6 +842,8 @@ cd informasi_obat_dan_stok_apotek
 # 2. Install & Setup
 composer install
 cp .env.example .env
+#or
+copy .env.example .env
 php artisan key:generate
 
 # 3. Configure Database (edit .env)
