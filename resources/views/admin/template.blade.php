@@ -30,6 +30,8 @@
             transition: all 0.3s;
             z-index: 1000;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar.collapsed {
@@ -42,6 +44,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
         .sidebar-brand {
@@ -79,8 +82,33 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        .sidebar-menu {
+        /* Menu Container dengan Scroll */
+        .sidebar-menu-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
             padding: 1rem 0;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-menu {
+            padding: 0;
             list-style: none;
         }
 
@@ -136,13 +164,10 @@
 
         /* User Info in Sidebar */
         .sidebar-user {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
             padding: 1.5rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
         }
 
         .user-info {
@@ -328,10 +353,6 @@
             }
         }
 
-
-
-
-
         /* Mobile Menu Toggle */
         .mobile-menu-toggle {
             display: none;
@@ -342,11 +363,9 @@
             border-radius: 10px;
             cursor: pointer;
             font-size: 1.4rem;
-            /* Sedikit diperbesar agar lebih terlihat */
             color: #1e293b;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-right: 10px;
-            /* ✅ Tambahkan jarak dari tulisan */
         }
 
         @media (max-width: 768px) {
@@ -373,70 +392,66 @@
             </button>
         </div>
 
-        <ul class="sidebar-menu">
-            <li class="menu-item">
-                <a href="{{ route('admin.dashboard') }}"
-                    class="menu-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <span class="menu-icon">📊</span>
-                    <span class="menu-text">Dashboard</span>
-                </a>
-            </li>
+        <div class="sidebar-menu-container">
+            <ul class="sidebar-menu">
+                <li class="menu-item">
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="menu-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <span class="menu-icon">📊</span>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
 
-            <li class="menu-item">
-                <a href="{{ route('admin.obat.index') }}"
-                    class="menu-link {{ request()->routeIs('admin.obat.*') ? 'active' : '' }}">
-                    <span class="menu-icon">💊</span>
-                    <span class="menu-text">Kelola Obat</span>
-                </a>
-            </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.obat.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.obat.*') ? 'active' : '' }}">
+                        <span class="menu-icon">💊</span>
+                        <span class="menu-text">Kelola Obat</span>
+                    </a>
+                </li>
 
-            <li class="menu-item">
-                <a href="{{ route('admin.supplier.index') }}"
-                    class="menu-link {{ request()->routeIs('admin.supplier.*') ? 'active' : '' }}">
-                    <span class="menu-icon">🫱🏻‍🫲🏻</span>
-                    <span class="menu-text">Kelola Supplier</span>
-                </a>
-            </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.supplier.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.supplier.*') ? 'active' : '' }}">
+                        <span class="menu-icon">🫱🏻‍🫲🏻</span>
+                        <span class="menu-text">Kelola Supplier</span>
+                    </a>
+                </li>
 
-            <li class="menu-item">
-                <a href="{{ route('admin.stock.index') }}"
-                    class="menu-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
-                    <span class="menu-icon">📦</span>
-                    <span class="menu-text">Stok</span>
-                    {{-- <span class="menu-badge">5</span> --}}
-                </a>
-            </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.stock.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
+                        <span class="menu-icon">📦</span>
+                        <span class="menu-text">Stok</span>
+                        {{-- <span class="menu-badge">5</span> --}}
+                    </a>
+                </li>
 
-            <li class="menu-item">
-                <a href="{{ route('admin.users.index') }}"
-                    class="menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <span class="menu-icon">👥</span>
-                    <span class="menu-text">Kelola User</span>
-                </a>
-            </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <span class="menu-icon">👥</span>
+                        <span class="menu-text">Kelola User</span>
+                    </a>
+                </li>
 
+                <li class="menu-item">
+                    <a href="{{ route('admin.category.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.category.*') ? 'active' : '' }}">
+                        <span class="menu-icon">📁</span>
+                        <span class="menu-text">Kategori</span>
+                    </a>
+                </li>
 
-
-
-
-
-
-            <li class="menu-item">
-                <a href="{{ route('admin.category.index') }}"
-                    class="menu-link {{ request()->routeIs('admin.category.*') ? 'active' : '' }}">
-                    <span class="menu-icon">📁</span>
-                    <span class="menu-text">Kategori</span>
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="{{ route('admin.settings.index') }}"
-                    class="menu-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <span class="menu-icon">⚙️</span>
-                    <span class="menu-text">Pengaturan</span>
-                </a>
-            </li>
-        </ul>
+                <li class="menu-item">
+                    <a href="{{ route('admin.settings.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-text">Pengaturan</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
         <div class="sidebar-user">
             <div class="user-info">
