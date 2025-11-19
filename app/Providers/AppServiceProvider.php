@@ -22,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Jangan eksekusi query saat perintah artisan tertentu berjalan
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
         $apotek = Apotek::first();
 
         // Jika belum ada data, buat default
